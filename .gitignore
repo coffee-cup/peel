@@ -1,0 +1,13 @@
+# Binary
+/peel
+
+# Frontend
+web/node_modules/
+web/dist/
+
+# Embedded dist (built frontend copied here)
+internal/embed/dist/
+!internal/embed/dist/index.html
+
+# OS
+.DS_Store
