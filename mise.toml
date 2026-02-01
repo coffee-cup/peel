@@ -25,6 +25,11 @@ cd web && bun run build && cd .. && rm -rf internal/embed/dist && cp -r web/dist
 """
 depends = ["generate:embed-stub"]
 
+[tasks.check]
+description = "Typecheck Go and TypeScript"
+depends = ["generate:embed-stub"]
+run = "go vet ./... && cd web && bunx tsc --noEmit"
+
 [tasks.clean]
 description = "Remove build artifacts"
 run = "rm -f peel && rm -rf web/dist internal/embed/dist"

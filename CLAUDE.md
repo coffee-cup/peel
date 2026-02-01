@@ -2,13 +2,13 @@
 
 Container image inspector — Go backend + React frontend, single binary for prod.
 
-## Dev workflow
+## Important
 
-```
-Terminal 1: mise run dev-backend     # Go on :8080
-Terminal 2: mise run dev-frontend    # Vite on :5173 w/ HMR, proxies /api → :8080
-Browser:    http://localhost:5173
-```
+Never run dev servers (`mise run dev-backend`, `mise run dev-frontend`). The human manages those.
+
+## Validation
+
+Run `mise run check` after making changes to typecheck Go and TypeScript.
 
 ## Build
 
