@@ -8,8 +8,14 @@ description = "Start Vite dev server with HMR"
 dir = "web"
 run = "bun run dev"
 
+[tasks."generate:embed-stub"]
+description = "Ensure embed dist stub exists for go build"
+run = 'mkdir -p internal/embed/dist && [ -f internal/embed/dist/index.html ] || echo "<!DOCTYPE html><html><body><p>peel — run mise run build</p></body></html>" > internal/embed/dist/index.html'
+hide = true
+
 [tasks.dev-backend]
 description = "Start Go backend in dev mode"
+depends = ["generate:embed-stub"]
 run = "go run ./cmd/peel --dev --port 8080 --no-open"
 
 [tasks.build]
@@ -17,12 +23,8 @@ description = "Build single binary with embedded frontend"
 run = """
 cd web && bun run build && cd .. && rm -rf internal/embed/dist && cp -r web/dist internal/embed/dist && go build -o peel ./cmd/peel
 """
+depends = ["generate:embed-stub"]
 
 [tasks.clean]
 description = "Remove build artifacts"
-run = """
-rm -f peel
-rm -rf web/dist internal/embed/dist
-mkdir -p internal/embed/dist
-echo '<!DOCTYPE html><html><body><p>peel — run mise run build</p></body></html>' > internal/embed/dist/index.html
-"""
+run = "rm -f peel && rm -rf web/dist internal/embed/dist"

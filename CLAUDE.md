@@ -26,6 +26,6 @@ Browser:    http://localhost:5173
 
 - Go stdlib HTTP server (no framework). `http.ServeMux` with method-pattern routing (`GET /api/...`)
 - Frontend proxies `/api` to Go in dev via Vite config. No dev proxy on Go side.
-- `internal/embed/dist/index.html` is a stub checked into git so bare `go build` works. `mise run build` replaces it with real assets.
+- `internal/embed/dist/` is fully generated, never committed. `generate:embed-stub` mise task creates a placeholder so `go build` works on fresh clones; `dev-backend` and `build` depend on it automatically.
 - `go-containerregistry` for all OCI/Docker image operations
 - API is JSON over REST. Endpoints defined in `docs/ARCHITECTURE.md`.
