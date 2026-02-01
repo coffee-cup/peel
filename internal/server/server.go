@@ -1,24 +1,23 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/coffee-cup/peel/internal/embed"
+	"github.com/coffee-cup/peel/internal/image"
 )
 
-func New(dev bool) http.Handler {
+func New(dev bool, img *image.Image) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/health", handleHealth)
+	mux.HandleFunc("GET /api/image", handleImage(img))
+	mux.HandleFunc("GET /api/layers", handleLayers(img))
+	mux.HandleFunc("GET /api/layers/{id}/tree", handleLayerTree(img))
+	mux.HandleFunc("GET /api/layers/{id}/diff", handleLayerDiff(img))
+	mux.HandleFunc("GET /api/files/{layer}/{path...}", handleFileContent(img))
 
-	// Serve embedded frontend assets for non-API routes
 	mux.Handle("/", embed.FileServer())
 
 	return mux
-}
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }

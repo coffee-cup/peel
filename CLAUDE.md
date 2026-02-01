@@ -10,6 +10,8 @@ Never run dev servers (`mise run dev-backend`, `mise run dev-frontend`). The hum
 
 Run `mise run check` after making changes to typecheck Go and TypeScript.
 
+ONLY RUN mise commands. Do not run `go vet` or `tsc --noEmit` directly. Use `mise run check` instead.
+
 ## Build
 
 `mise run build` — builds frontend, embeds into Go binary, outputs `./peel`
