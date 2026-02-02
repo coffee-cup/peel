@@ -1,25 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
-import { Tabs } from "@base-ui-components/react/tabs";
+import { useState, useMemo, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import type { FileNode, DiffEntry, ChangeKind } from "../types";
 import { formatBytes } from "../utils";
-
-type ViewMode = "tree" | "diff";
-
-interface FileTreeProps {
-  tree: FileNode | null;
-  diff: DiffEntry[];
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
-  selectedFile: string | null;
-  onSelectFile: (path: string) => void;
-  loading: boolean;
-}
-
-const changeColors: Record<ChangeKind, string> = {
-  added: "text-change-added",
-  modified: "text-change-modified",
-  deleted: "text-change-deleted",
-};
+import { useTreeKeyboard, type VisibleNode } from "../hooks/useTreeKeyboard";
 
 const changeDots: Record<ChangeKind, string> = {
   added: "bg-change-added",
@@ -27,206 +9,256 @@ const changeDots: Record<ChangeKind, string> = {
   deleted: "bg-change-deleted",
 };
 
-export function FileTree({
-  tree,
-  diff,
-  viewMode,
-  onViewModeChange,
-  selectedFile,
-  onSelectFile,
-  loading,
-}: FileTreeProps) {
+export interface FileTreeHandle {
+  toggleAllFolders: () => void;
+}
+
+interface FileTreeProps {
+  tree: FileNode | null;
+  diff: DiffEntry[];
+  selectedFile: string | null;
+  onSelectFile: (path: string) => void;
+  loading: boolean;
+}
+
+/** Collect all dir paths from a tree, optionally filtering by max depth. */
+function collectDirPaths(node: FileNode, depth: number, maxDepth?: number): string[] {
+  const paths: string[] = [];
+  if (node.type !== "dir") return paths;
+  if (node.path !== "/") paths.push(node.path);
+  if (maxDepth !== undefined && depth >= maxDepth) return paths;
+  for (const child of node.children ?? []) {
+    paths.push(...collectDirPaths(child, depth + 1, maxDepth));
+  }
+  return paths;
+}
+
+/** Filter tree to only nodes present in diffMap + their ancestor dirs. Returns null if nothing matches. */
+function filterTreeToChanges(node: FileNode, diffMap: Map<string, ChangeKind>): FileNode | null {
+  if (node.type !== "dir") {
+    return diffMap.has(node.path) ? node : null;
+  }
+  const filteredChildren: FileNode[] = [];
+  for (const child of node.children ?? []) {
+    const filtered = filterTreeToChanges(child, diffMap);
+    if (filtered) filteredChildren.push(filtered);
+  }
+  if (filteredChildren.length === 0 && !diffMap.has(node.path)) return null;
+  return { ...node, children: filteredChildren };
+}
+
+/** Flatten tree + expanded set into visible nodes list. Skips root "/". */
+function flattenTree(
+  node: FileNode,
+  expanded: Set<string>,
+  depth: number,
+  parentPath: string | null,
+  out: VisibleNode[],
+  nodeMap: Map<string, FileNode>,
+) {
+  for (const child of node.children ?? []) {
+    const isDir = child.type === "dir";
+    out.push({ path: child.path, depth, isDir, parentPath });
+    nodeMap.set(child.path, child);
+    if (isDir && expanded.has(child.path)) {
+      flattenTree(child, expanded, depth + 1, child.path, out, nodeMap);
+    }
+  }
+}
+
+export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileTree(
+  { tree, diff, selectedFile, onSelectFile, loading },
+  ref,
+) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [changesOnly, setChangesOnly] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
   const diffMap = useMemo(() => {
     const m = new Map<string, ChangeKind>();
     for (const d of diff) m.set(d.path, d.changeKind);
     return m;
   }, [diff]);
 
+  // Initialize default expansion when tree changes
+  useEffect(() => {
+    if (!tree) return;
+    const defaults = collectDirPaths(tree, 0, 1);
+    setExpanded(new Set(defaults));
+    setFocusedIndex(0);
+  }, [tree]);
+
+  const displayTree = useMemo(() => {
+    if (!tree) return null;
+    if (!changesOnly) return tree;
+    return filterTreeToChanges(tree, diffMap);
+  }, [tree, changesOnly, diffMap]);
+
+  const { visibleNodes, nodeMap } = useMemo(() => {
+    const nodes: VisibleNode[] = [];
+    const map = new Map<string, FileNode>();
+    if (displayTree) flattenTree(displayTree, expanded, 0, null, nodes, map);
+    return { visibleNodes: nodes, nodeMap: map };
+  }, [displayTree, expanded]);
+
+  // Clamp focused index
+  useEffect(() => {
+    if (focusedIndex >= visibleNodes.length && visibleNodes.length > 0) {
+      setFocusedIndex(visibleNodes.length - 1);
+    }
+  }, [visibleNodes.length, focusedIndex]);
+
+  // Scroll focused row into view
+  useEffect(() => {
+    rowRefs.current.get(focusedIndex)?.scrollIntoView({ block: "nearest" });
+  }, [focusedIndex]);
+
+  const handleKeyDown = useTreeKeyboard({
+    visibleNodes,
+    focusedIndex,
+    setFocusedIndex,
+    expanded,
+    setExpanded,
+    onSelectFile,
+  });
+
+  const toggleAllFolders = useCallback(() => {
+    if (!tree) return;
+    const allDirs = collectDirPaths(tree, 0);
+    const allExpanded = allDirs.every((p) => expanded.has(p));
+    if (allExpanded) {
+      // Collapse all
+      setExpanded(new Set());
+    } else {
+      // Expand to depth 3
+      setExpanded(new Set(collectDirPaths(tree, 0, 3)));
+    }
+  }, [tree, expanded]);
+
+  useImperativeHandle(ref, () => ({ toggleAllFolders }), [toggleAllFolders]);
+
+  const handleRowClick = useCallback(
+    (index: number) => {
+      setFocusedIndex(index);
+      const node = visibleNodes[index];
+      if (!node) return;
+      if (node.isDir) {
+        setExpanded((prev) => {
+          const next = new Set(prev);
+          if (next.has(node.path)) next.delete(node.path);
+          else next.add(node.path);
+          return next;
+        });
+      } else {
+        onSelectFile(node.path);
+      }
+    },
+    [visibleNodes, onSelectFile],
+  );
+
+  const changesCount = diff.length;
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Tabs.Root
-        value={viewMode}
-        onValueChange={(v) => onViewModeChange(v as ViewMode)}
-      >
-        <Tabs.List className="flex gap-px border-b border-border px-2 shrink-0">
-          <Tabs.Tab
-            value="tree"
-            className="px-3 py-1.5 text-xs font-medium text-neutral-400 data-[selected]:text-neutral-100 data-[selected]:border-b data-[selected]:border-accent cursor-pointer"
-          >
-            Tree
-          </Tabs.Tab>
-          <Tabs.Tab
-            value="diff"
-            className="px-3 py-1.5 text-xs font-medium text-neutral-400 data-[selected]:text-neutral-100 data-[selected]:border-b data-[selected]:border-accent cursor-pointer"
-          >
-            Changes
-            {diff.length > 0 && (
-              <span className="ml-1.5 text-[10px] text-neutral-500">
-                {diff.length}
-              </span>
-            )}
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs.Root>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border shrink-0">
+        <span className="text-xs font-medium text-neutral-400">Files</span>
+        <button
+          type="button"
+          className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+            changesOnly
+              ? "bg-accent/20 text-accent"
+              : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800"
+          }`}
+          onClick={() => setChangesOnly((v) => !v)}
+        >
+          Changes
+          {changesCount > 0 && (
+            <span
+              className={`text-[10px] px-1 rounded-full ${
+                changesOnly ? "bg-accent/30" : "bg-neutral-700"
+              }`}
+            >
+              {changesCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-      <div className="flex-1 overflow-y-auto p-1 text-xs font-mono">
+      {/* Tree body */}
+      <div
+        ref={containerRef}
+        role="tree"
+        tabIndex={0}
+        className="flex-1 overflow-y-auto p-1 text-xs font-mono outline-none"
+        onKeyDown={handleKeyDown}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-32 text-neutral-500">
             Loading…
           </div>
-        ) : viewMode === "tree" ? (
-          tree?.children?.map((node) => (
-            <TreeNode
-              key={node.path}
-              node={node}
-              depth={0}
-              diffMap={diffMap}
-              selectedFile={selectedFile}
-              onSelectFile={onSelectFile}
-            />
-          )) ?? (
-            <div className="text-neutral-500 p-3">Empty layer</div>
-          )
-        ) : (
-          <DiffList
-            diff={diff}
-            selectedFile={selectedFile}
-            onSelectFile={onSelectFile}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function TreeNode({
-  node,
-  depth,
-  diffMap,
-  selectedFile,
-  onSelectFile,
-}: {
-  node: FileNode;
-  depth: number;
-  diffMap: Map<string, ChangeKind>;
-  selectedFile: string | null;
-  onSelectFile: (path: string) => void;
-}) {
-  const [expanded, setExpanded] = useState(depth < 1);
-  const isDir = node.type === "dir";
-  const isSymlink = node.type === "symlink";
-  const change = diffMap.get(node.path);
-  const active = node.path === selectedFile;
-
-  const handleClick = useCallback(() => {
-    if (isDir) {
-      setExpanded((prev) => !prev);
-    } else {
-      onSelectFile(node.path);
-    }
-  }, [isDir, node.path, onSelectFile]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        handleClick();
-      } else if (e.key === "ArrowRight" && isDir && !expanded) {
-        e.preventDefault();
-        setExpanded(true);
-      } else if (e.key === "ArrowLeft" && isDir && expanded) {
-        e.preventDefault();
-        setExpanded(false);
-      }
-    },
-    [handleClick, isDir, expanded],
-  );
-
-  return (
-    <>
-      <div
-        role="treeitem"
-        tabIndex={0}
-        className={`flex items-center gap-1 py-px pr-2 rounded cursor-pointer hover:bg-neutral-800/50 ${
-          active ? "bg-accent/10 text-neutral-100" : "text-neutral-300"
-        }`}
-        style={{ paddingLeft: depth * 16 + 4 }}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-      >
-        <span className="w-4 shrink-0 text-center text-neutral-500">
-          {isDir ? (expanded ? "▾" : "▸") : isSymlink ? "↗" : " "}
-        </span>
-        <span className={`truncate ${isDir ? "text-neutral-200" : ""}`}>
-          {node.name}
-        </span>
-        {isSymlink && node.linkTarget && (
-          <span className="text-neutral-600 truncate">→ {node.linkTarget}</span>
-        )}
-        {change && (
-          <span
-            className={`w-1.5 h-1.5 rounded-full shrink-0 ml-auto ${changeDots[change]}`}
-          />
-        )}
-        {!isDir && node.size > 0 && (
-          <span className="text-neutral-600 shrink-0 ml-auto">
-            {formatBytes(node.size)}
-          </span>
-        )}
-      </div>
-      {isDir && expanded && node.children?.map((child) => (
-        <TreeNode
-          key={child.path}
-          node={child}
-          depth={depth + 1}
-          diffMap={diffMap}
-          selectedFile={selectedFile}
-          onSelectFile={onSelectFile}
-        />
-      ))}
-    </>
-  );
-}
-
-function DiffList({
-  diff,
-  selectedFile,
-  onSelectFile,
-}: {
-  diff: DiffEntry[];
-  selectedFile: string | null;
-  onSelectFile: (path: string) => void;
-}) {
-  if (diff.length === 0) {
-    return <div className="text-neutral-500 p-3">No changes</div>;
-  }
-
-  return (
-    <div>
-      {diff.map((entry) => {
-        const active = entry.path === selectedFile;
-        const canSelect = entry.type === "file" && entry.changeKind !== "deleted";
-        return (
-          <div
-            key={entry.path}
-            className={`flex items-center gap-2 py-px px-2 rounded ${
-              canSelect ? "cursor-pointer hover:bg-neutral-800/50" : ""
-            } ${active ? "bg-accent/10" : ""}`}
-            onClick={canSelect ? () => onSelectFile(entry.path) : undefined}
-          >
-            <span className={`shrink-0 text-[10px] uppercase font-bold w-5 ${changeColors[entry.changeKind]}`}>
-              {entry.changeKind[0]}
-            </span>
-            <span className={`truncate ${changeColors[entry.changeKind]}`}>
-              {entry.path}
-            </span>
-            {entry.size > 0 && (
-              <span className="text-neutral-600 shrink-0 ml-auto">
-                {formatBytes(entry.size)}
-              </span>
-            )}
+        ) : visibleNodes.length === 0 ? (
+          <div className="text-neutral-500 p-3">
+            {changesOnly ? "No changes" : "Empty layer"}
           </div>
-        );
-      })}
+        ) : (
+          visibleNodes.map((vn, i) => {
+            const fileNode = nodeMap.get(vn.path)!;
+            const change = diffMap.get(vn.path);
+            const active = vn.path === selectedFile;
+            const focused = i === focusedIndex;
+            const isSymlink = fileNode.type === "symlink";
+
+            return (
+              <div
+                key={vn.path}
+                ref={(el) => {
+                  if (el) rowRefs.current.set(i, el);
+                  else rowRefs.current.delete(i);
+                }}
+                role="treeitem"
+                tabIndex={focused ? 0 : -1}
+                aria-expanded={vn.isDir ? expanded.has(vn.path) : undefined}
+                aria-selected={active}
+                className={`flex items-center gap-1 py-px pr-1 rounded cursor-pointer hover:bg-neutral-800/50 ${
+                  active ? "bg-accent/10 text-neutral-100" : "text-neutral-300"
+                } ${focused ? "outline outline-1 outline-accent/40" : ""}`}
+                style={{ paddingLeft: vn.depth * 16 + 4 }}
+                onClick={() => handleRowClick(i)}
+              >
+                {/* Expand/collapse icon */}
+                <span className="w-4 shrink-0 text-center text-neutral-500">
+                  {vn.isDir ? (expanded.has(vn.path) ? "▾" : "▸") : isSymlink ? "↗" : " "}
+                </span>
+
+                {/* Name */}
+                <span className={`flex-1 truncate ${vn.isDir ? "text-neutral-200" : ""}`}>
+                  {fileNode.name}
+                  {isSymlink && fileNode.linkTarget && (
+                    <span className="text-neutral-600"> → {fileNode.linkTarget}</span>
+                  )}
+                </span>
+
+                {/* Size column */}
+                <span className="w-14 text-right tabular-nums text-neutral-600 shrink-0">
+                  {!vn.isDir && fileNode.size > 0 ? formatBytes(fileNode.size) : ""}
+                </span>
+
+                {/* Change dot column */}
+                <span className="w-3 flex justify-center shrink-0">
+                  {change && (
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${changeDots[change]}`}
+                    />
+                  )}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
-}
+});

@@ -1,25 +1,43 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useSyncExternalStore } from "react";
 import { Panel, Group, Separator } from "react-resizable-panels";
 import { useImage } from "./hooks/useImage";
 import { useLayerData } from "./hooks/useLayerData";
 import { useFileContent } from "./hooks/useFileContent";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { LayerList } from "./components/LayerList";
-import { FileTree } from "./components/FileTree";
+import { FileTree, type FileTreeHandle } from "./components/FileTree";
 import { FileViewer } from "./components/FileViewer";
 import { MetadataPanel } from "./components/MetadataPanel";
 
-type ViewMode = "tree" | "diff";
+function useMediaQuery(query: string): boolean {
+  const subscribe = useCallback(
+    (cb: () => void) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", cb);
+      return () => mql.removeEventListener("change", cb);
+    },
+    [query],
+  );
+  const getSnapshot = useCallback(() => window.matchMedia(query).matches, [query]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
 
 function App() {
   const { image, layers, loading: imageLoading, error: imageError } = useImage();
   const [selectedLayer, setSelectedLayer] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("tree");
 
   const { tree, diff, loading: layerLoading } = useLayerData(selectedLayer);
   const { file, loading: fileLoading } = useFileContent(selectedLayer, selectedFile);
-  const { layersRef, treeRef, viewerRef, activePanel } = useKeyboardNav();
+
+  const fileTreeRef = useRef<FileTreeHandle>(null);
+  const onTreeShiftTab = useCallback(() => {
+    fileTreeRef.current?.toggleAllFolders();
+  }, []);
+
+  const { layersRef, treeRef, viewerRef, activePanel } = useKeyboardNav(onTreeShiftTab);
+
+  const isWide = useMediaQuery("(min-width: 1024px)");
 
   const handleLayerSelect = useCallback((index: number) => {
     setSelectedLayer(index);
@@ -46,7 +64,6 @@ function App() {
     );
   }
 
-  // Auto-select first non-empty layer
   if (selectedLayer === null && layers.length > 0) {
     const first = layers.find((l) => !l.empty) ?? layers[0];
     setSelectedLayer(first.index);
@@ -56,7 +73,6 @@ function App() {
 
   return (
     <div className="h-screen bg-surface text-neutral-100 flex flex-col overflow-hidden">
-      {/* Header */}
       <header className="flex items-center gap-3 px-4 py-2 border-b border-border shrink-0">
         <h1 className="text-sm font-semibold tracking-tight">peel</h1>
         {image && (
@@ -66,7 +82,6 @@ function App() {
         )}
       </header>
 
-      {/* Main content */}
       <Group orientation="horizontal" className="flex-1 min-h-0">
         {/* Sidebar: layers + metadata */}
         <Panel defaultSize="20%" minSize="15%">
@@ -92,18 +107,17 @@ function App() {
 
         {/* Right: tree + viewer */}
         <Panel defaultSize="80%">
-          <Group orientation="vertical">
-            <Panel defaultSize="60%">
+          <Group orientation={isWide ? "horizontal" : "vertical"}>
+            <Panel defaultSize={isWide ? "50%" : "60%"}>
               <div
                 ref={treeRef}
                 tabIndex={-1}
                 className={`h-full overflow-hidden outline-none ${activePanel === "tree" ? ringClass : ""}`}
               >
                 <FileTree
+                  ref={fileTreeRef}
                   tree={tree}
                   diff={diff}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
                   selectedFile={selectedFile}
                   onSelectFile={handleSelectFile}
                   loading={layerLoading}
@@ -111,9 +125,15 @@ function App() {
               </div>
             </Panel>
 
-            <Separator className="h-px bg-border hover:bg-accent/50 transition-colors data-[active]:bg-accent" />
+            <Separator
+              className={
+                isWide
+                  ? "w-px bg-border hover:bg-accent/50 transition-colors data-[active]:bg-accent"
+                  : "h-px bg-border hover:bg-accent/50 transition-colors data-[active]:bg-accent"
+              }
+            />
 
-            <Panel defaultSize="40%">
+            <Panel defaultSize={isWide ? "50%" : "40%"}>
               <div
                 ref={viewerRef}
                 tabIndex={-1}

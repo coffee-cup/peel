@@ -31,6 +31,9 @@ export function FileViewer({ file, loading }: FileViewerProps) {
       <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border shrink-0">
         <span className="font-mono text-xs text-neutral-200 truncate">
           {file.path}
+          {file.resolvedPath && (
+            <span className="text-neutral-500"> → {file.resolvedPath}</span>
+          )}
         </span>
         <span className="text-xs text-neutral-500 shrink-0">
           {formatBytes(file.size)}

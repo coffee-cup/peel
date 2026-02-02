@@ -1,38 +1,22 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import type { ImageInfo, LayerInfo } from "../types";
 
-interface UseImageResult {
-  image: ImageInfo | null;
-  layers: LayerInfo[];
-  loading: boolean;
-  error: string | null;
-}
+export function useImage() {
+  const imageQuery = useQuery<ImageInfo>({
+    queryKey: ["image"],
+    queryFn: api.image,
+  });
 
-export function useImage(): UseImageResult {
-  const [image, setImage] = useState<ImageInfo | null>(null);
-  const [layers, setLayers] = useState<LayerInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const layersQuery = useQuery<LayerInfo[]>({
+    queryKey: ["layers"],
+    queryFn: api.layers,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [img, lyrs] = await Promise.all([api.image(), api.layers()]);
-        if (cancelled) return;
-        setImage(img);
-        setLayers(lyrs);
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Failed to load image");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, []);
-
-  return { image, layers, loading, error };
+  return {
+    image: imageQuery.data ?? null,
+    layers: layersQuery.data ?? [],
+    loading: imageQuery.isPending || layersQuery.isPending,
+    error: imageQuery.error?.message ?? layersQuery.error?.message ?? null,
+  };
 }

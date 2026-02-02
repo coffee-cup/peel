@@ -117,8 +117,8 @@ func Analyze(img v1.Image, ref string) (*Image, error) {
 }
 
 // ReadFile reads file content from the cumulative filesystem at the given layer.
-// Searches backward through content layers to find the file.
-func (im *Image) ReadFile(layerIdx int, path string) (*FileContent, error) {
+// Resolves symlinks before reading. Searches backward through content layers.
+func (im *Image) ReadFile(layerIdx int, filePath string) (*FileContent, error) {
 	if layerIdx < 0 || layerIdx >= len(im.Layers) {
 		return nil, fmt.Errorf("layer index %d out of range [0, %d)", layerIdx, len(im.Layers))
 	}
@@ -133,16 +133,31 @@ func (im *Image) ReadFile(layerIdx int, path string) (*FileContent, error) {
 		emptyFlags[i] = l.Empty
 	}
 
-	data, size, err := readFileFromLayer(layers, emptyFlags, layerIdx, path)
+	// Resolve symlinks if we have a tree for this layer
+	readPath := filePath
+	var resolvedPath string
+	if tree := im.Trees[layerIdx]; tree != nil {
+		resolved, err := resolveSymlink(tree, filePath, 10)
+		if err != nil {
+			return nil, err
+		}
+		if resolved != filePath {
+			resolvedPath = resolved
+			readPath = resolved
+		}
+	}
+
+	data, size, err := readFileFromLayer(layers, emptyFlags, layerIdx, readPath)
 	if err != nil {
 		return nil, err
 	}
 
 	binary := isBinary(data)
 	fc := &FileContent{
-		Path:     path,
-		Size:     size,
-		IsBinary: binary,
+		Path:         filePath,
+		ResolvedPath: resolvedPath,
+		Size:         size,
+		IsBinary:     binary,
 	}
 
 	if binary {

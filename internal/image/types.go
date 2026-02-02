@@ -61,11 +61,12 @@ type DiffEntry struct {
 }
 
 type FileContent struct {
-	Path      string `json:"path"`
-	Size      int64  `json:"size"`
-	IsBinary  bool   `json:"isBinary"`
-	Truncated bool   `json:"truncated"`
-	Content   string `json:"content"`
+	Path         string `json:"path"`
+	ResolvedPath string `json:"resolvedPath,omitempty"`
+	Size         int64  `json:"size"`
+	IsBinary     bool   `json:"isBinary"`
+	Truncated    bool   `json:"truncated"`
+	Content      string `json:"content"`
 }
 
 // Image holds the fully-analyzed image in memory. Immutable after Analyze().

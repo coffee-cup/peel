@@ -45,6 +45,7 @@ export interface DiffEntry {
 
 export interface FileContent {
   path: string;
+  resolvedPath?: string;
   size: number;
   isBinary: boolean;
   truncated: boolean;

@@ -3,7 +3,7 @@ import { useRef, useCallback, useEffect, useState } from "react";
 type PanelName = "layers" | "tree" | "viewer";
 const panels: PanelName[] = ["layers", "tree", "viewer"];
 
-export function useKeyboardNav() {
+export function useKeyboardNav(onTreeShiftTab?: () => void) {
   const layersRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -24,6 +24,12 @@ export function useKeyboardNav() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== "Tab") return;
       e.preventDefault();
+
+      if (e.shiftKey && activePanel === "tree" && onTreeShiftTab) {
+        onTreeShiftTab();
+        return;
+      }
+
       const idx = panels.indexOf(activePanel);
       const next = e.shiftKey
         ? panels[(idx - 1 + panels.length) % panels.length]
@@ -32,7 +38,7 @@ export function useKeyboardNav() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activePanel, focusPanel]);
+  }, [activePanel, focusPanel, onTreeShiftTab]);
 
   return { layersRef, treeRef, viewerRef, activePanel, focusPanel };
 }

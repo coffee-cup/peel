@@ -297,6 +297,47 @@ func collectAll(n *FileNode, kind ChangeKind, diffs *[]DiffEntry) {
 	}
 }
 
+// buildPathLookup creates a map from path to FileNode for quick lookups.
+func buildPathLookup(root *FileNode) map[string]*FileNode {
+	lookup := make(map[string]*FileNode)
+	var walk func(n *FileNode)
+	walk = func(n *FileNode) {
+		lookup[n.Path] = n
+		for _, c := range n.Children {
+			walk(c)
+		}
+	}
+	walk(root)
+	return lookup
+}
+
+// resolveSymlink follows symlink chains in the tree, returning the resolved path.
+// Returns the original path if not a symlink. Returns an error for dangling or cyclic links.
+func resolveSymlink(root *FileNode, filePath string, maxHops int) (string, error) {
+	if maxHops <= 0 {
+		maxHops = 10
+	}
+	lookup := buildPathLookup(root)
+
+	current := filePath
+	for i := 0; i < maxHops; i++ {
+		node, ok := lookup[current]
+		if !ok {
+			return "", fmt.Errorf("dangling symlink: %s not found", current)
+		}
+		if node.Type != FileTypeSymlink {
+			return current, nil
+		}
+		target := node.LinkTarget
+		if !strings.HasPrefix(target, "/") {
+			target = path.Join(path.Dir(current), target)
+		}
+		target = "/" + strings.TrimPrefix(path.Clean(target), "/")
+		current = target
+	}
+	return "", fmt.Errorf("symlink cycle: exceeded %d hops from %s", maxHops, filePath)
+}
+
 // readFileFromLayer searches backward through layers to find a file at path.
 func readFileFromLayer(layers []v1.Layer, emptyFlags []bool, layerIdx int, filePath string) ([]byte, int64, error) {
 	cleanPath := "/" + strings.TrimPrefix(path.Clean(filePath), "/")
