@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useSyncExternalStore } from "react";
+import { useState, useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { Panel, Group, Separator } from "react-resizable-panels";
 import { useImage } from "./hooks/useImage";
 import { useLayerData } from "./hooks/useLayerData";
@@ -36,6 +36,10 @@ function App() {
   }, []);
 
   const { layersRef, treeRef, viewerRef, activePanel } = useKeyboardNav(onTreeShiftTab);
+
+  useEffect(() => {
+    document.title = image ? `peel - ${image.ref}` : "peel";
+  }, [image]);
 
   const isWide = useMediaQuery("(min-width: 1024px)");
 
