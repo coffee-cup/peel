@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Panel, Group, Separator } from "react-resizable-panels";
 import { useImage } from "./hooks/useImage";
 import { useLayerData } from "./hooks/useLayerData";
 import { useFileContent } from "./hooks/useFileContent";
@@ -54,58 +55,76 @@ function App() {
   const ringClass = "ring-1 ring-accent/30";
 
   return (
-    <div className="h-screen bg-surface text-neutral-100 grid grid-cols-[280px_1fr] grid-rows-[auto_1fr_minmax(200px,40vh)] overflow-hidden">
+    <div className="h-screen bg-surface text-neutral-100 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="col-span-2 flex items-center justify-between px-4 py-2 border-b border-border">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-semibold tracking-tight">peel</h1>
-          {image && (
-            <span className="text-xs font-mono text-neutral-400">
-              {image.ref}
-            </span>
-          )}
-        </div>
-        <MetadataPanel image={image} />
+      <header className="flex items-center gap-3 px-4 py-2 border-b border-border shrink-0">
+        <h1 className="text-sm font-semibold tracking-tight">peel</h1>
+        {image && (
+          <span className="text-xs font-mono text-neutral-400">
+            {image.ref}
+          </span>
+        )}
       </header>
 
-      {/* Layer list */}
-      <div
-        ref={layersRef}
-        tabIndex={-1}
-        className={`border-r border-border overflow-hidden outline-none ${activePanel === "layers" ? ringClass : ""}`}
-      >
-        <LayerList
-          layers={layers}
-          selected={selectedLayer}
-          onSelect={handleLayerSelect}
-        />
-      </div>
+      {/* Main content */}
+      <Group orientation="horizontal" className="flex-1 min-h-0">
+        {/* Sidebar: layers + metadata */}
+        <Panel defaultSize="20%" minSize="15%">
+          <div className="h-full flex flex-col">
+            <div
+              ref={layersRef}
+              tabIndex={-1}
+              className={`flex-1 min-h-0 overflow-hidden outline-none ${activePanel === "layers" ? ringClass : ""}`}
+            >
+              <LayerList
+                layers={layers}
+                selected={selectedLayer}
+                onSelect={handleLayerSelect}
+              />
+            </div>
+            <div className="border-t border-border overflow-auto p-3">
+              <MetadataPanel image={image} />
+            </div>
+          </div>
+        </Panel>
 
-      {/* File tree */}
-      <div
-        ref={treeRef}
-        tabIndex={-1}
-        className={`overflow-hidden outline-none ${activePanel === "tree" ? ringClass : ""}`}
-      >
-        <FileTree
-          tree={tree}
-          diff={diff}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          selectedFile={selectedFile}
-          onSelectFile={handleSelectFile}
-          loading={layerLoading}
-        />
-      </div>
+        <Separator className="w-px bg-border hover:bg-accent/50 transition-colors data-[active]:bg-accent" />
 
-      {/* File viewer */}
-      <div
-        ref={viewerRef}
-        tabIndex={-1}
-        className={`col-span-2 border-t border-border overflow-hidden outline-none ${activePanel === "viewer" ? ringClass : ""}`}
-      >
-        <FileViewer file={file} loading={fileLoading} />
-      </div>
+        {/* Right: tree + viewer */}
+        <Panel defaultSize="80%">
+          <Group orientation="vertical">
+            <Panel defaultSize="60%">
+              <div
+                ref={treeRef}
+                tabIndex={-1}
+                className={`h-full overflow-hidden outline-none ${activePanel === "tree" ? ringClass : ""}`}
+              >
+                <FileTree
+                  tree={tree}
+                  diff={diff}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  selectedFile={selectedFile}
+                  onSelectFile={handleSelectFile}
+                  loading={layerLoading}
+                />
+              </div>
+            </Panel>
+
+            <Separator className="h-px bg-border hover:bg-accent/50 transition-colors data-[active]:bg-accent" />
+
+            <Panel defaultSize="40%">
+              <div
+                ref={viewerRef}
+                tabIndex={-1}
+                className={`h-full overflow-hidden outline-none ${activePanel === "viewer" ? ringClass : ""}`}
+              >
+                <FileViewer file={file} loading={fileLoading} />
+              </div>
+            </Panel>
+          </Group>
+        </Panel>
+      </Group>
     </div>
   );
 }
