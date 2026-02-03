@@ -16,7 +16,7 @@ hide = true
 [tasks.dev-backend]
 description = "Start Go backend in dev mode"
 depends = ["generate:embed-stub"]
-run = "go run ./cmd/peel --no-open"
+run = "go run ./cmd/peel --no-open -p 9870"
 
 [tasks.build]
 description = "Build single binary with embedded frontend"

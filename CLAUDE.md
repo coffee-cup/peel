@@ -12,6 +12,10 @@ Run `mise run check` after making changes to typecheck Go and TypeScript.
 
 ONLY RUN mise commands. Do not run `go vet` or `tsc --noEmit` directly. Use `mise run check` instead.
 
+## Testing
+
+`mise run test` — runs Go and frontend tests.
+
 ## Build
 
 `mise run build` — builds frontend, embeds into Go binary, outputs `./peel`

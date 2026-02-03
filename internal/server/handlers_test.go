@@ -24,7 +24,9 @@ func testServer(t *testing.T) *httptest.Server {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return httptest.NewServer(New(analyzed))
+	srv := New("test:latest")
+	srv.SetImage(analyzed)
+	return httptest.NewServer(srv)
 }
 
 func TestHealth(t *testing.T) {

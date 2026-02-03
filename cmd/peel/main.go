@@ -46,19 +46,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("loading %s (%s/%s)", ref, plat.OS, plat.Architecture)
-	img, err := image.LoadImage(ref, plat)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	analyzed, err := image.Analyze(img, ref)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("analyzed %d layers", analyzed.Info.LayerCount)
-
-	srv := server.New(analyzed)
+	srv := server.New(ref)
 
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
@@ -72,6 +60,25 @@ func main() {
 	}
 
 	log.Printf("listening on %s", url)
+
+	go func() {
+		log.Printf("loading %s (%s/%s)", ref, plat.OS, plat.Architecture)
+		img, err := image.LoadImage(ref, plat)
+		if err != nil {
+			log.Printf("error loading image: %v", err)
+			srv.SetError(err)
+			return
+		}
+		analyzed, err := image.Analyze(img, ref)
+		if err != nil {
+			log.Printf("error analyzing image: %v", err)
+			srv.SetError(err)
+			return
+		}
+		log.Printf("analyzed %d layers", analyzed.Info.LayerCount)
+		srv.SetImage(analyzed)
+	}()
+
 	if err := http.Serve(ln, srv); err != nil {
 		log.Fatal(err)
 	}

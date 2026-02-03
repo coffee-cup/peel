@@ -73,7 +73,10 @@ function App() {
   if (imageError) {
     return (
       <div className="flex h-dvh items-center justify-center bg-surface text-stone-100">
-        <div className="text-sm text-red-400">{imageError}</div>
+        <div className="max-w-md text-center space-y-2">
+          <div className="text-sm text-red-400">Failed to load image</div>
+          <div className="text-xs text-stone-500 font-mono break-all">{imageError.message}</div>
+        </div>
       </div>
     );
   }
