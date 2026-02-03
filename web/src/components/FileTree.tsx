@@ -21,6 +21,8 @@ interface FileTreeProps {
   loading: boolean;
   initialExpanded?: Set<string>;
   onExpandedChange?: (expanded: Set<string>) => void;
+  changesOnly: boolean;
+  onChangesOnlyChange: (v: boolean) => void;
 }
 
 /** Collect all dir paths from a tree, optionally filtering by max depth. */
@@ -69,7 +71,7 @@ function flattenTree(
 }
 
 export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileTree(
-  { tree, diff, selectedFile, onSelectFile, loading, initialExpanded, onExpandedChange },
+  { tree, diff, selectedFile, onSelectFile, loading, initialExpanded, onExpandedChange, changesOnly, onChangesOnlyChange },
   ref,
 ) {
   const [expanded, setExpanded] = useState<Set<string>>(
@@ -77,7 +79,6 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
   );
   const [initialized, setInitialized] = useState(!!initialExpanded);
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [changesOnly, setChangesOnly] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -182,7 +183,7 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
               ? "bg-accent/20 text-accent"
               : "text-stone-500 hover:text-stone-300 hover:bg-stone-800"
           }`}
-          onClick={() => setChangesOnly((v) => !v)}
+          onClick={() => onChangesOnlyChange(!changesOnly)}
         >
           Changes
           {changesCount > 0 && (

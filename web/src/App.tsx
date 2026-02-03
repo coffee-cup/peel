@@ -26,6 +26,7 @@ function App() {
   const { image, layers, loading: imageLoading, error: imageError } = useImage();
   const [selectedLayer, setSelectedLayer] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [changesOnly, setChangesOnly] = useState(false);
 
   const { tree, diff, loading: layerLoading } = useLayerData(selectedLayer);
   const { file, loading: fileLoading } = useFileContent(selectedLayer, selectedFile);
@@ -143,6 +144,8 @@ function App() {
                   loading={layerLoading}
                   initialExpanded={selectedLayer != null ? (expandedCache.current.get(selectedLayer) ?? lastExpanded.current) : undefined}
                   onExpandedChange={handleExpandedChange}
+                  changesOnly={changesOnly}
+                  onChangesOnlyChange={setChangesOnly}
                 />
               </div>
             </Panel>
