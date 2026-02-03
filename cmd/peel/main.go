@@ -13,12 +13,20 @@ import (
 	"github.com/coffee-cup/peel/internal/server"
 )
 
+var version = "dev"
+
 func main() {
+	showVersion := flag.Bool("version", false, "print version and exit")
 	port := flag.Int("port", 8080, "port to listen on")
 	dev := flag.Bool("dev", false, "development mode")
 	noOpen := flag.Bool("no-open", false, "don't auto-open browser")
 	platform := flag.String("platform", "", "target platform os/arch (default: host)")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	ref := flag.Arg(0)
 	if ref == "" {
