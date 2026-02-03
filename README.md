@@ -16,25 +16,9 @@
 
 ---
 
-```
-┌─────────────────────────────────────────────────────┐
-│  peel — image:tag                          metadata │
-├──────────────┬──────────────────────────────────────┤
-│              │                                      │
-│   Layers     │         File Tree                    │
-│              │                                      │
-│   [layer 1]  │    ├── bin/                         │
-│   [layer 2]  │    ├── etc/                         │
-│   [layer 3]◄─│    │   └── nginx.conf [modified]    │
-│              │    └── var/                         │
-│              │                                      │
-├──────────────┴──────────────────────────────────────┤
-│                                                     │
-│   File Content Viewer                               │
-│   (syntax highlighted or hex)                       │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="docs/screenshot.png" alt="peel inspecting nginx image" width="800" />
+</p>
 
 ## Features
 
