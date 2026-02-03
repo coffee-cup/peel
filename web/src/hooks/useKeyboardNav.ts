@@ -1,7 +1,7 @@
 import { useRef, useCallback, useEffect, useState } from "react";
+import { tinykeys } from "tinykeys";
 
 type PanelName = "layers" | "tree" | "viewer";
-const panels: PanelName[] = ["layers", "tree", "viewer"];
 
 export function useKeyboardNav(onTreeShiftTab?: () => void) {
   const layersRef = useRef<HTMLDivElement>(null);
@@ -17,27 +17,44 @@ export function useKeyboardNav(onTreeShiftTab?: () => void) {
 
   const focusPanel = useCallback((name: PanelName) => {
     setActivePanel(name);
-    refs[name].current?.focus();
+    const panel = refs[name].current;
+    if (!panel) return;
+    // Focus inner interactive element so keyboard handlers fire
+    const inner =
+      panel.querySelector<HTMLElement>('[role="tree"]') ??
+      panel.querySelector<HTMLElement>("button") ??
+      panel;
+    inner.focus();
+  }, []);
+
+  // Track activePanel from actual DOM focus
+  useEffect(() => {
+    function handleFocusIn(e: FocusEvent) {
+      const target = e.target as HTMLElement;
+      if (layersRef.current?.contains(target)) setActivePanel("layers");
+      else if (treeRef.current?.contains(target)) setActivePanel("tree");
+      else if (viewerRef.current?.contains(target)) setActivePanel("viewer");
+    }
+    document.addEventListener("focusin", handleFocusIn);
+    return () => document.removeEventListener("focusin", handleFocusIn);
   }, []);
 
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Tab") return;
-      e.preventDefault();
-
-      if (e.shiftKey && activePanel === "tree" && onTreeShiftTab) {
-        onTreeShiftTab();
-        return;
-      }
-
-      const idx = panels.indexOf(activePanel);
-      const next = e.shiftKey
-        ? panels[(idx - 1 + panels.length) % panels.length]
-        : panels[(idx + 1) % panels.length];
-      focusPanel(next);
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return tinykeys(window, {
+      Tab: (e) => {
+        e.preventDefault();
+        const cycle: PanelName[] = ["layers", "tree"];
+        const idx = cycle.indexOf(activePanel);
+        const next = idx === -1 ? "layers" : cycle[(idx + 1) % cycle.length];
+        focusPanel(next);
+      },
+      "Shift+Tab": (e) => {
+        e.preventDefault();
+        onTreeShiftTab?.();
+        // Re-focus after React re-render (collapsed treeitems lose focus)
+        requestAnimationFrame(() => focusPanel(activePanel));
+      },
+    });
   }, [activePanel, focusPanel, onTreeShiftTab]);
 
   return { layersRef, treeRef, viewerRef, activePanel, focusPanel };

@@ -32,6 +32,7 @@ export function useTreeKeyboard({
       if (!node) return;
 
       switch (e.key) {
+        case "j":
         case "ArrowDown": {
           e.preventDefault();
           if (focusedIndex < visibleNodes.length - 1) {
@@ -39,6 +40,7 @@ export function useTreeKeyboard({
           }
           break;
         }
+        case "k":
         case "ArrowUp": {
           e.preventDefault();
           if (focusedIndex > 0) {
@@ -46,6 +48,7 @@ export function useTreeKeyboard({
           }
           break;
         }
+        case "l":
         case "ArrowRight": {
           e.preventDefault();
           if (node.isDir && !expanded.has(node.path)) {
@@ -58,6 +61,7 @@ export function useTreeKeyboard({
           }
           break;
         }
+        case "h":
         case "ArrowLeft": {
           e.preventDefault();
           if (node.isDir && expanded.has(node.path)) {
@@ -72,6 +76,18 @@ export function useTreeKeyboard({
               (n) => n.path === node.parentPath,
             );
             if (parentIdx >= 0) setFocusedIndex(parentIdx);
+          }
+          break;
+        }
+        case " ": {
+          e.preventDefault();
+          if (node.isDir) {
+            setExpanded((prev) => {
+              const next = new Set(prev);
+              if (next.has(node.path)) next.delete(node.path);
+              else next.add(node.path);
+              return next;
+            });
           }
           break;
         }

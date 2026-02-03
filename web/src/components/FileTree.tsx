@@ -110,9 +110,15 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
     }
   }, [visibleNodes.length, focusedIndex]);
 
-  // Scroll focused row into view
+  // Scroll focused row into view + sync DOM focus
   useEffect(() => {
-    rowRefs.current.get(focusedIndex)?.scrollIntoView({ block: "nearest" });
+    const el = rowRefs.current.get(focusedIndex);
+    if (el) {
+      el.scrollIntoView({ block: "nearest" });
+      if (el !== document.activeElement && containerRef.current?.contains(document.activeElement)) {
+        el.focus({ preventScroll: true });
+      }
+    }
   }, [focusedIndex]);
 
   const handleKeyDown = useTreeKeyboard({
@@ -126,13 +132,9 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
 
   const toggleAllFolders = useCallback(() => {
     if (!tree) return;
-    const allDirs = collectDirPaths(tree, 0);
-    const allExpanded = allDirs.every((p) => expanded.has(p));
-    if (allExpanded) {
-      // Collapse all
+    if (expanded.size > 0) {
       setExpanded(new Set());
     } else {
-      // Expand to depth 3
       setExpanded(new Set(collectDirPaths(tree, 0, 3)));
     }
   }, [tree, expanded]);
@@ -167,7 +169,7 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
         <span className="text-xs font-medium text-neutral-400">Files</span>
         <button
           type="button"
-          className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+          className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium transition-colors outline-none ${
             changesOnly
               ? "bg-accent/20 text-accent"
               : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800"
@@ -222,9 +224,9 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
                 tabIndex={focused ? 0 : -1}
                 aria-expanded={vn.isDir ? expanded.has(vn.path) : undefined}
                 aria-selected={active}
-                className={`flex items-center gap-1 py-px pr-1 rounded cursor-pointer hover:bg-neutral-800/50 ${
+                className={`flex items-center gap-1 py-px pr-1 rounded cursor-pointer hover:bg-neutral-800/50 outline-none ${
                   active ? "bg-accent/10 text-neutral-100" : "text-neutral-300"
-                } ${focused ? "outline outline-1 outline-accent/40" : ""}`}
+                } ${focused ? "ring-1 ring-accent/40" : ""}`}
                 style={{ paddingLeft: vn.depth * 16 + 4 }}
                 onClick={() => handleRowClick(i)}
               >
