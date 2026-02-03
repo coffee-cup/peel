@@ -62,13 +62,7 @@ func main() {
 
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		if portExplicit {
-			log.Fatal(err)
-		}
-		ln, err = net.Listen("tcp", ":0")
-		if err != nil {
-			log.Fatal(err)
-		}
+		log.Fatal(err)
 	}
 	actualPort := ln.Addr().(*net.TCPAddr).Port
 	url := fmt.Sprintf("http://localhost:%d", actualPort)
@@ -109,10 +103,9 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "%s\n", bold("Usage:"))
 	fmt.Fprintf(os.Stderr, "  peel <image> [flags]\n\n")
 	fmt.Fprintf(os.Stderr, "%s\n", bold("Flags:"))
-	fmt.Fprintf(os.Stderr, "  %s, %s         %s\n", cyan("-p"), cyan("--port"), "port to listen on "+dim("(int, default 8080)"))
+	fmt.Fprintf(os.Stderr, "  %s, %s         %s\n", cyan("-p"), cyan("--port"), "port to listen on "+dim("(int, default random)"))
 	fmt.Fprintf(os.Stderr, "      %s     %s\n", cyan("--platform"), "target platform os/arch "+dim("(e.g. linux/amd64)"))
 	fmt.Fprintf(os.Stderr, "      %s      %s\n", cyan("--no-open"), "don't auto-open browser")
-	fmt.Fprintf(os.Stderr, "      %s          %s\n", cyan("--dev"), "development mode")
 	fmt.Fprintf(os.Stderr, "  %s, %s      %s\n", cyan("-v"), cyan("--version"), "print version and exit")
 }
 
