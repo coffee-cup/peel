@@ -20,6 +20,10 @@ ONLY RUN mise commands. Do not run `go vet` or `tsc --noEmit` directly. Use `mis
 
 `mise run build` — builds frontend, embeds into Go binary, outputs `./peel`
 
+## Releasing
+
+See [RELEASE.md](RELEASE.md) for release instructions (`git tag v* && push`).
+
 ## Project structure
 
 - `cmd/peel/` — CLI entrypoint, flag parsing
