@@ -8,6 +8,12 @@
   A browser-based container image inspector. Like <a href="https://github.com/wagoodman/dive">dive</a>, but visual.
 </p>
 
+<p align="center">
+  <a href="https://github.com/coffee-cup/peel/releases/latest"><img src="https://img.shields.io/github/release/coffee-cup/peel.svg" alt="GitHub release" /></a>
+  <a href="https://github.com/coffee-cup/peel/actions/workflows/ci.yml"><img src="https://github.com/coffee-cup/peel/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/coffee-cup/peel/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+</p>
+
 ---
 
 ```
