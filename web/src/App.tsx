@@ -31,9 +31,19 @@ function App() {
   const { file, loading: fileLoading } = useFileContent(selectedLayer, selectedFile);
 
   const fileTreeRef = useRef<FileTreeHandle>(null);
+  const expandedCache = useRef<Map<number, Set<string>>>(new Map());
+  const lastExpanded = useRef<Set<string> | undefined>(undefined);
   const onTreeShiftTab = useCallback(() => {
     fileTreeRef.current?.toggleAllFolders();
   }, []);
+
+  const handleExpandedChange = useCallback(
+    (expanded: Set<string>) => {
+      if (selectedLayer != null) expandedCache.current.set(selectedLayer, expanded);
+      lastExpanded.current = expanded;
+    },
+    [selectedLayer],
+  );
 
   const { layersRef, treeRef, viewerRef, activePanel } = useKeyboardNav(onTreeShiftTab);
 
@@ -119,12 +129,15 @@ function App() {
                 className={`h-full overflow-hidden outline-none ${activePanel === "tree" ? ringClass : ""}`}
               >
                 <FileTree
+                  key={selectedLayer ?? undefined}
                   ref={fileTreeRef}
                   tree={tree}
                   diff={diff}
                   selectedFile={selectedFile}
                   onSelectFile={handleSelectFile}
                   loading={layerLoading}
+                  initialExpanded={selectedLayer != null ? (expandedCache.current.get(selectedLayer) ?? lastExpanded.current) : undefined}
+                  onExpandedChange={handleExpandedChange}
                 />
               </div>
             </Panel>

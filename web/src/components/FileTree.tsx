@@ -19,6 +19,8 @@ interface FileTreeProps {
   selectedFile: string | null;
   onSelectFile: (path: string) => void;
   loading: boolean;
+  initialExpanded?: Set<string>;
+  onExpandedChange?: (expanded: Set<string>) => void;
 }
 
 /** Collect all dir paths from a tree, optionally filtering by max depth. */
@@ -67,10 +69,13 @@ function flattenTree(
 }
 
 export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileTree(
-  { tree, diff, selectedFile, onSelectFile, loading },
+  { tree, diff, selectedFile, onSelectFile, loading, initialExpanded, onExpandedChange },
   ref,
 ) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => initialExpanded ?? new Set(),
+  );
+  const [initialized, setInitialized] = useState(!!initialExpanded);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [changesOnly, setChangesOnly] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,13 +87,16 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
     return m;
   }, [diff]);
 
-  // Initialize default expansion when tree changes
-  useEffect(() => {
-    if (!tree) return;
-    const defaults = collectDirPaths(tree, 0, 1);
-    setExpanded(new Set(defaults));
+  // State-during-render: set depth-1 defaults when tree first loads
+  if (!initialized && tree) {
+    setInitialized(true);
+    setExpanded(new Set(collectDirPaths(tree, 0, 1)));
     setFocusedIndex(0);
-  }, [tree]);
+  }
+
+  useEffect(() => {
+    onExpandedChange?.(expanded);
+  }, [expanded, onExpandedChange]);
 
   const displayTree = useMemo(() => {
     if (!tree) return null;
