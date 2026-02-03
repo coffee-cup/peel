@@ -37,6 +37,12 @@
 go install github.com/coffee-cup/peel/cmd/peel@latest
 ```
 
+**eget:**
+
+```
+eget coffee-cup/peel
+```
+
 **GitHub Releases:**
 
 Pre-built binaries for macOS, Linux, and Windows are available on the [Releases](https://github.com/coffee-cup/peel/releases) page.
