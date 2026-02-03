@@ -74,7 +74,7 @@ echo "  ${BOLD}To:${RESET}   ${INSTALL_DIR}/${BIN_NAME}"
 # Confirm unless -f
 if [ "$FORCE" = false ]; then
   printf "\nProceed? [y/N] "
-  read -r answer
+  read -r answer < /dev/tty
   case "$answer" in
     [yY]|[yY][eE][sS]) ;;
     *) warn "Aborted."; exit 0 ;;
