@@ -67,7 +67,7 @@ peel <image-reference> [flags]
 |------|-------------|
 | `--platform <os/arch>` | Target platform for multi-arch images (default: host) |
 | `--no-open` | Don't auto-open browser |
-| `--port <port>` | Port to listen on (default: 8080) |
+| `--port <port>` | Port to listen on (default: random) |
 
 ## Build from source
 
