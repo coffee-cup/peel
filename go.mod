@@ -2,7 +2,11 @@ module github.com/coffee-cup/peel
 
 go 1.25.4
 
-require github.com/google/go-containerregistry v0.20.7
+require (
+	github.com/google/go-containerregistry v0.20.7
+	github.com/spf13/pflag v1.0.10
+	golang.org/x/term v0.39.0
+)
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect

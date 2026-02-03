@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -12,16 +11,23 @@ import (
 
 	"github.com/coffee-cup/peel/internal/image"
 	"github.com/coffee-cup/peel/internal/server"
+	flag "github.com/spf13/pflag"
+	"golang.org/x/term"
 )
 
 var version = "dev"
 
+func isTTY() bool {
+	return term.IsTerminal(int(os.Stderr.Fd()))
+}
+
 func main() {
-	showVersion := flag.Bool("version", false, "print version and exit")
-	port := flag.Int("port", 8080, "port to listen on")
-	dev := flag.Bool("dev", false, "development mode")
+	flag.Usage = usage
+
+	showVersion := flag.BoolP("version", "v", false, "print version and exit")
+	port := flag.IntP("port", "p", 0, "port to listen on")
 	noOpen := flag.Bool("no-open", false, "don't auto-open browser")
-	platform := flag.String("platform", "", "target platform os/arch (default: host)")
+	platform := flag.String("platform", "", "target platform os/arch")
 	flag.Parse()
 
 	if *showVersion {
@@ -31,7 +37,7 @@ func main() {
 
 	ref := flag.Arg(0)
 	if ref == "" {
-		fmt.Fprintf(os.Stderr, "usage: peel <image-reference> [flags]\n")
+		usage()
 		os.Exit(1)
 	}
 
@@ -52,10 +58,13 @@ func main() {
 	}
 	log.Printf("analyzed %d layers", analyzed.Info.LayerCount)
 
-	srv := server.New(*dev, analyzed)
+	srv := server.New(analyzed)
 
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
+		if portExplicit {
+			log.Fatal(err)
+		}
 		ln, err = net.Listen("tcp", ":0")
 		if err != nil {
 			log.Fatal(err)
@@ -64,7 +73,7 @@ func main() {
 	actualPort := ln.Addr().(*net.TCPAddr).Port
 	url := fmt.Sprintf("http://localhost:%d", actualPort)
 
-	if !*noOpen && !*dev {
+	if !*noOpen {
 		go openBrowser(url)
 	}
 
@@ -72,6 +81,39 @@ func main() {
 	if err := http.Serve(ln, srv); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func usage() {
+	tty := isTTY()
+
+	bold := func(s string) string {
+		if tty {
+			return "\033[1m" + s + "\033[0m"
+		}
+		return s
+	}
+	cyan := func(s string) string {
+		if tty {
+			return "\033[36m" + s + "\033[0m"
+		}
+		return s
+	}
+	dim := func(s string) string {
+		if tty {
+			return "\033[2m" + s + "\033[0m"
+		}
+		return s
+	}
+
+	fmt.Fprintf(os.Stderr, "%s\n\n", bold("peel")+" — container image inspector")
+	fmt.Fprintf(os.Stderr, "%s\n", bold("Usage:"))
+	fmt.Fprintf(os.Stderr, "  peel <image> [flags]\n\n")
+	fmt.Fprintf(os.Stderr, "%s\n", bold("Flags:"))
+	fmt.Fprintf(os.Stderr, "  %s, %s         %s\n", cyan("-p"), cyan("--port"), "port to listen on "+dim("(int, default 8080)"))
+	fmt.Fprintf(os.Stderr, "      %s     %s\n", cyan("--platform"), "target platform os/arch "+dim("(e.g. linux/amd64)"))
+	fmt.Fprintf(os.Stderr, "      %s      %s\n", cyan("--no-open"), "don't auto-open browser")
+	fmt.Fprintf(os.Stderr, "      %s          %s\n", cyan("--dev"), "development mode")
+	fmt.Fprintf(os.Stderr, "  %s, %s      %s\n", cyan("-v"), cyan("--version"), "print version and exit")
 }
 
 func openBrowser(url string) {

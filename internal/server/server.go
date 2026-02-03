@@ -7,7 +7,7 @@ import (
 	"github.com/coffee-cup/peel/internal/image"
 )
 
-func New(dev bool, img *image.Image) http.Handler {
+func New(img *image.Image) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/health", handleHealth)
