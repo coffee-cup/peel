@@ -83,7 +83,8 @@ function App() {
     setSelectedLayer(first.index);
   }
 
-  const ringClass = "ring-1 ring-accent/30";
+  const borderActive = "border-2 border-accent/50";
+  const borderInactive = "border-2 border-transparent";
 
   return (
     <div className="h-screen bg-surface text-neutral-100 flex flex-col overflow-hidden">
@@ -96,14 +97,15 @@ function App() {
         )}
       </header>
 
-      <Group orientation="horizontal" className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 p-0.5">
+      <Group orientation="horizontal" className="h-full">
         {/* Sidebar: layers + metadata */}
         <Panel defaultSize="20%" minSize="15%">
           <div className="h-full flex flex-col">
             <div
               ref={layersRef}
               tabIndex={-1}
-              className={`flex-1 min-h-0 overflow-hidden outline-none ${activePanel === "layers" ? ringClass : ""}`}
+              className={`flex-1 min-h-0 overflow-hidden outline-none ${activePanel === "layers" ? borderActive : borderInactive}`}
             >
               <LayerList
                 layers={layers}
@@ -126,7 +128,7 @@ function App() {
               <div
                 ref={treeRef}
                 tabIndex={-1}
-                className={`h-full overflow-hidden outline-none ${activePanel === "tree" ? ringClass : ""}`}
+                className={`h-full overflow-hidden outline-none ${activePanel === "tree" ? borderActive : borderInactive}`}
               >
                 <FileTree
                   key={selectedLayer ?? undefined}
@@ -154,7 +156,7 @@ function App() {
               <div
                 ref={viewerRef}
                 tabIndex={-1}
-                className={`h-full overflow-hidden outline-none ${activePanel === "viewer" ? ringClass : ""}`}
+                className={`h-full overflow-hidden outline-none ${activePanel === "viewer" ? borderActive : borderInactive}`}
               >
                 <FileViewer file={file} loading={fileLoading} />
               </div>
@@ -162,6 +164,7 @@ function App() {
           </Group>
         </Panel>
       </Group>
+      </div>
     </div>
   );
 }

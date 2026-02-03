@@ -7,7 +7,7 @@ export function useKeyboardNav(onTreeShiftTab?: () => void) {
   const layersRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
-  const [activePanel, setActivePanel] = useState<PanelName>("layers");
+  const [activePanel, setActivePanel] = useState<PanelName | null>(null);
 
   const refs: Record<PanelName, React.RefObject<HTMLDivElement | null>> = {
     layers: layersRef,
@@ -44,15 +44,19 @@ export function useKeyboardNav(onTreeShiftTab?: () => void) {
       Tab: (e) => {
         e.preventDefault();
         const cycle: PanelName[] = ["layers", "tree"];
-        const idx = cycle.indexOf(activePanel);
+        const idx = activePanel ? cycle.indexOf(activePanel) : -1;
         const next = idx === -1 ? "layers" : cycle[(idx + 1) % cycle.length];
         focusPanel(next);
+      },
+      Escape: () => {
+        setActivePanel(null);
+        (document.activeElement as HTMLElement)?.blur();
       },
       "Shift+Tab": (e) => {
         e.preventDefault();
         onTreeShiftTab?.();
         // Re-focus after React re-render (collapsed treeitems lose focus)
-        requestAnimationFrame(() => focusPanel(activePanel));
+        requestAnimationFrame(() => focusPanel(activePanel ?? "layers"));
       },
     });
   }, [activePanel, focusPanel, onTreeShiftTab]);
