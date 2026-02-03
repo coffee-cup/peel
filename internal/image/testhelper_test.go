@@ -3,6 +3,7 @@ package image
 import (
 	"archive/tar"
 	"bytes"
+	"slices"
 	"testing"
 	"time"
 
@@ -11,6 +12,22 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 )
+
+// reversedHistoryImage wraps a v1.Image and reverses its config history,
+// simulating the behavior of daemon.Image() which returns history newest-first.
+type reversedHistoryImage struct {
+	v1.Image
+}
+
+func (r *reversedHistoryImage) ConfigFile() (*v1.ConfigFile, error) {
+	cf, err := r.Image.ConfigFile()
+	if err != nil {
+		return nil, err
+	}
+	cp := cf.DeepCopy()
+	slices.Reverse(cp.History)
+	return cp, nil
+}
 
 // testImage builds a synthetic two-layer OCI image and runs Analyze on it.
 //

@@ -2,6 +2,7 @@ package image
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -15,9 +16,13 @@ const (
 // Analyze extracts all metadata, builds filesystem trees, and computes diffs.
 // The returned Image is immutable and safe for concurrent reads.
 func Analyze(img v1.Image, ref string) (*Image, error) {
-	cf, err := img.ConfigFile()
+	raw, err := img.RawConfigFile()
 	if err != nil {
-		return nil, fmt.Errorf("config: %w", err)
+		return nil, fmt.Errorf("raw config: %w", err)
+	}
+	var cf v1.ConfigFile
+	if err := json.Unmarshal(raw, &cf); err != nil {
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
 	digest, err := img.Digest()

@@ -1,8 +1,14 @@
 package image
 
 import (
+	"archive/tar"
 	"runtime"
 	"testing"
+	"time"
+
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 )
 
 func TestParsePlatform_Empty(t *testing.T) {
@@ -61,6 +67,61 @@ func TestIsBinary_NullPast8KB(t *testing.T) {
 	data[8500] = 0x00
 	if isBinary(data) {
 		t.Fatal("null past 8KB should not be detected")
+	}
+}
+
+func TestAnalyze_ReversedDaemonHistory(t *testing.T) {
+	base := buildTarLayer(t, []tarEntry{
+		{name: "base.txt", typeflag: tar.TypeReg, data: []byte("base\n")},
+	})
+	top := buildTarLayer(t, []tarEntry{
+		{name: "top.txt", typeflag: tar.TypeReg, data: []byte("top\n")},
+	})
+
+	img, err := mutate.Append(empty.Image,
+		mutate.Addendum{
+			Layer:   base,
+			History: v1.History{CreatedBy: "base-cmd", Created: v1.Time{Time: time.Unix(1, 0)}},
+		},
+		mutate.Addendum{
+			Layer:   top,
+			History: v1.History{CreatedBy: "top-cmd", Created: v1.Time{Time: time.Unix(2, 0)}},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wrapped := &reversedHistoryImage{img}
+	result, err := Analyze(wrapped, "test:reversed")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(result.Layers) != 2 {
+		t.Fatalf("expected 2 layers, got %d", len(result.Layers))
+	}
+	if result.Layers[0].Command != "base-cmd" {
+		t.Errorf("layer 0 command: got %q, want %q", result.Layers[0].Command, "base-cmd")
+	}
+	if result.Layers[1].Command != "top-cmd" {
+		t.Errorf("layer 1 command: got %q, want %q", result.Layers[1].Command, "top-cmd")
+	}
+
+	// Verify diff contents match layer order
+	hasFile := func(diffs []DiffEntry, name string) bool {
+		for _, d := range diffs {
+			if d.Path == "/"+name {
+				return true
+			}
+		}
+		return false
+	}
+	if !hasFile(result.Diffs[0], "base.txt") {
+		t.Errorf("layer 0 diff should contain /base.txt, got %v", result.Diffs[0])
+	}
+	if !hasFile(result.Diffs[1], "top.txt") {
+		t.Errorf("layer 1 diff should contain /top.txt, got %v", result.Diffs[1])
 	}
 }
 
