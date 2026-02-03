@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 * {
-  scrollbar-color: var(--color-neutral-700) transparent;
+  scrollbar-color: var(--color-stone-600) transparent;
   scrollbar-width: thin;
 }
 
@@ -13,18 +13,18 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-neutral-700);
+  background: var(--color-stone-600);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-neutral-600);
+  background: var(--color-stone-500);
 }
 
 @theme {
-  --color-surface: var(--color-neutral-950);
-  --color-panel: var(--color-neutral-900);
-  --color-border: var(--color-neutral-800);
-  --color-accent: var(--color-blue-500);
+  --color-surface: var(--color-stone-900);
+  --color-panel: var(--color-stone-800);
+  --color-border: var(--color-stone-700);
+  --color-accent: var(--color-teal-500);
   --color-change-added: var(--color-green-400);
   --color-change-modified: var(--color-amber-400);
   --color-change-deleted: var(--color-red-400);

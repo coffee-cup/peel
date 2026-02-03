@@ -42,21 +42,21 @@ export function LayerList({ layers, selected, onSelect }: LayerListProps) {
                   <button
                     className={`flex items-start gap-2 px-3 py-2 text-left text-sm border-l-2 transition-colors cursor-pointer outline-none ${
                       active
-                        ? "bg-accent/10 border-accent text-neutral-100"
-                        : "border-transparent hover:bg-neutral-800/50 text-neutral-300"
+                        ? "bg-accent/10 border-accent text-stone-100"
+                        : "border-transparent hover:bg-stone-800/50 text-stone-300"
                     } ${layer.empty ? "opacity-40" : ""}`}
                     onClick={() => onSelect(layer.index)}
                   />
                 }
               >
-                <span className="shrink-0 w-5 h-5 rounded bg-neutral-800 text-[10px] font-mono flex items-center justify-center text-neutral-400">
+                <span className="shrink-0 w-5 h-5 rounded bg-stone-800 text-[10px] font-mono flex items-center justify-center text-stone-400">
                   {layer.index}
                 </span>
                 <span className="flex-1 min-w-0 truncate font-mono text-xs">
                   {cmd || "(empty)"}
                 </span>
                 {layer.size > 0 && (
-                  <span className="shrink-0 text-xs text-neutral-500 font-mono">
+                  <span className="shrink-0 text-xs text-stone-500 font-mono">
                     {formatBytes(layer.size)}
                   </span>
                 )}
@@ -64,7 +64,7 @@ export function LayerList({ layers, selected, onSelect }: LayerListProps) {
               {cmd && (
                 <Tooltip.Portal>
                   <Tooltip.Positioner sideOffset={8}>
-                    <Tooltip.Popup className="max-w-sm rounded bg-neutral-800 px-3 py-2 text-xs font-mono text-neutral-200 shadow-lg border border-neutral-700 z-50">
+                    <Tooltip.Popup className="max-w-sm rounded bg-stone-800 px-3 py-2 text-xs font-mono text-stone-200 shadow-lg border border-stone-700 z-50">
                       {layer.command}
                     </Tooltip.Popup>
                   </Tooltip.Positioner>

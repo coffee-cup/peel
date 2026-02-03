@@ -64,15 +64,15 @@ function App() {
 
   if (imageLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-surface text-neutral-100">
-        <div className="text-sm text-neutral-400">Loading image…</div>
+      <div className="flex h-dvh items-center justify-center bg-surface text-stone-100">
+        <div className="text-sm text-stone-400">Loading image…</div>
       </div>
     );
   }
 
   if (imageError) {
     return (
-      <div className="flex h-screen items-center justify-center bg-surface text-neutral-100">
+      <div className="flex h-dvh items-center justify-center bg-surface text-stone-100">
         <div className="text-sm text-red-400">{imageError}</div>
       </div>
     );
@@ -87,11 +87,11 @@ function App() {
   const borderInactive = "border-2 border-transparent";
 
   return (
-    <div className="h-screen bg-surface text-neutral-100 flex flex-col overflow-hidden">
+    <div className="h-dvh bg-surface text-stone-100 flex flex-col overflow-hidden">
       <header className="flex items-center gap-3 px-4 py-2 border-b border-border shrink-0">
         <h1 className="text-sm font-semibold tracking-tight">peel</h1>
         {image && (
-          <span className="text-xs font-mono text-neutral-400">
+          <span className="text-xs font-mono text-stone-400">
             {image.ref}
           </span>
         )}

@@ -5,7 +5,7 @@ let instance: Promise<Highlighter> | null = null;
 export function getHighlighter(): Promise<Highlighter> {
   if (!instance) {
     instance = createHighlighter({
-      themes: ["nord"],
+      themes: ["rose-pine"],
       langs: [
         "javascript",
         "typescript",

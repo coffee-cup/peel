@@ -10,7 +10,7 @@ export function MetadataPanel({ image }: MetadataPanelProps) {
 
   return (
     <Collapsible.Root defaultOpen>
-      <Collapsible.Trigger className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-200 cursor-pointer transition-colors [&[data-panel-open]>.chevron]:rotate-90">
+      <Collapsible.Trigger className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-200 cursor-pointer transition-colors [&[data-panel-open]>.chevron]:rotate-90">
         <span className="chevron text-[10px] transition-transform">▸</span>
         metadata
       </Collapsible.Trigger>
@@ -27,10 +27,10 @@ export function MetadataPanel({ image }: MetadataPanelProps) {
           <Row label="user" value={image.config.user || "—"} />
           {image.config.env && image.config.env.length > 0 && (
             <>
-              <span className="text-neutral-500">env</span>
+              <span className="text-stone-500">env</span>
               <div className="flex flex-col gap-0.5">
                 {image.config.env.map((e, i) => (
-                  <span key={i} className="text-neutral-300 whitespace-nowrap">
+                  <span key={i} className="text-stone-300 whitespace-nowrap">
                     {e}
                   </span>
                 ))}
@@ -40,11 +40,11 @@ export function MetadataPanel({ image }: MetadataPanelProps) {
           {image.config.labels &&
             Object.keys(image.config.labels).length > 0 && (
               <>
-                <span className="text-neutral-500">labels</span>
+                <span className="text-stone-500">labels</span>
                 <div className="flex flex-col gap-0.5">
                   {Object.entries(image.config.labels).map(([k, v]) => (
-                    <span key={k} className="text-neutral-300 whitespace-nowrap">
-                      <span className="text-neutral-500">{k}=</span>
+                    <span key={k} className="text-stone-300 whitespace-nowrap">
+                      <span className="text-stone-500">{k}=</span>
                       {v}
                     </span>
                   ))}
@@ -60,8 +60,8 @@ export function MetadataPanel({ image }: MetadataPanelProps) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <>
-      <span className="text-neutral-500">{label}</span>
-      <span className="text-neutral-300 whitespace-nowrap">{value}</span>
+      <span className="text-stone-500">{label}</span>
+      <span className="text-stone-300 whitespace-nowrap">{value}</span>
     </>
   );
 }

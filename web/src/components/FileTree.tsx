@@ -174,13 +174,13 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border shrink-0">
-        <span className="text-xs font-medium text-neutral-400">Files</span>
+        <span className="text-xs font-medium text-stone-400">Files</span>
         <button
           type="button"
           className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium transition-colors outline-none ${
             changesOnly
               ? "bg-accent/20 text-accent"
-              : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800"
+              : "text-stone-500 hover:text-stone-300 hover:bg-stone-800"
           }`}
           onClick={() => setChangesOnly((v) => !v)}
         >
@@ -188,7 +188,7 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
           {changesCount > 0 && (
             <span
               className={`text-[10px] px-1 rounded-full ${
-                changesOnly ? "bg-accent/30" : "bg-neutral-700"
+                changesOnly ? "bg-accent/30" : "bg-stone-700"
               }`}
             >
               {changesCount}
@@ -206,11 +206,11 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
         onKeyDown={handleKeyDown}
       >
         {loading ? (
-          <div className="flex items-center justify-center h-32 text-neutral-500">
+          <div className="flex items-center justify-center h-32 text-stone-500">
             Loading…
           </div>
         ) : visibleNodes.length === 0 ? (
-          <div className="text-neutral-500 p-3">
+          <div className="text-stone-500 p-3">
             {changesOnly ? "No changes" : "Empty layer"}
           </div>
         ) : (
@@ -232,27 +232,27 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
                 tabIndex={focused ? 0 : -1}
                 aria-expanded={vn.isDir ? expanded.has(vn.path) : undefined}
                 aria-selected={active}
-                className={`flex items-center gap-1 py-px pr-1 rounded cursor-pointer hover:bg-neutral-800/50 outline-none ${
-                  active ? "bg-accent/10 text-neutral-100" : "text-neutral-300"
+                className={`flex items-center gap-1 py-px pr-1 rounded cursor-pointer hover:bg-stone-800/50 outline-none ${
+                  active ? "bg-accent/10 text-stone-100" : "text-stone-300"
                 } ${focused ? "ring-1 ring-accent/40" : ""}`}
                 style={{ paddingLeft: vn.depth * 16 + 4 }}
                 onClick={() => handleRowClick(i)}
               >
                 {/* Expand/collapse icon */}
-                <span className="w-4 shrink-0 text-center text-neutral-500">
+                <span className="w-4 shrink-0 text-center text-stone-500">
                   {vn.isDir ? (expanded.has(vn.path) ? "▾" : "▸") : isSymlink ? "↗" : " "}
                 </span>
 
                 {/* Name */}
-                <span className={`flex-1 truncate ${vn.isDir ? "text-neutral-200" : ""}`}>
+                <span className={`flex-1 truncate ${vn.isDir ? "text-stone-200" : ""}`}>
                   {fileNode.name}
                   {isSymlink && fileNode.linkTarget && (
-                    <span className="text-neutral-600"> → {fileNode.linkTarget}</span>
+                    <span className="text-stone-600"> → {fileNode.linkTarget}</span>
                   )}
                 </span>
 
                 {/* Size column */}
-                <span className="w-14 text-right tabular-nums text-neutral-600 shrink-0">
+                <span className="w-14 text-right tabular-nums text-stone-600 shrink-0">
                   {!vn.isDir && fileNode.size > 0 ? formatBytes(fileNode.size) : ""}
                 </span>
 

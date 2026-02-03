@@ -12,7 +12,7 @@ interface FileViewerProps {
 export function FileViewer({ file, loading }: FileViewerProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-neutral-500 text-sm">
+      <div className="flex items-center justify-center h-full text-stone-500 text-sm">
         Loading…
       </div>
     );
@@ -20,7 +20,7 @@ export function FileViewer({ file, loading }: FileViewerProps) {
 
   if (!file) {
     return (
-      <div className="flex items-center justify-center h-full text-neutral-500 text-sm">
+      <div className="flex items-center justify-center h-full text-stone-500 text-sm">
         Select a file to view its contents
       </div>
     );
@@ -29,13 +29,13 @@ export function FileViewer({ file, loading }: FileViewerProps) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border shrink-0">
-        <span className="font-mono text-xs text-neutral-200 truncate">
+        <span className="font-mono text-xs text-stone-200 truncate">
           {file.path}
           {file.resolvedPath && (
-            <span className="text-neutral-500"> → {file.resolvedPath}</span>
+            <span className="text-stone-500"> → {file.resolvedPath}</span>
           )}
         </span>
-        <span className="text-xs text-neutral-500 shrink-0">
+        <span className="text-xs text-stone-500 shrink-0">
           {formatBytes(file.size)}
         </span>
         {file.truncated && (
@@ -44,7 +44,7 @@ export function FileViewer({ file, loading }: FileViewerProps) {
           </span>
         )}
         {file.isBinary && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-700 text-neutral-400 shrink-0">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-700 text-stone-400 shrink-0">
             binary
           </span>
         )}
@@ -73,7 +73,7 @@ function SyntaxView({ path, content }: { path: string; content: string }) {
     getHighlighter().then((hl) => {
       if (cancelled) return;
       try {
-        const result = hl.codeToHtml(content, { lang, theme: "nord" });
+        const result = hl.codeToHtml(content, { lang, theme: "rose-pine" });
         setHtml(result);
       } catch {
         setHtml(null);
@@ -92,7 +92,7 @@ function SyntaxView({ path, content }: { path: string; content: string }) {
   }
 
   return (
-    <pre className="p-3 text-xs leading-relaxed text-neutral-300 overflow-x-auto whitespace-pre">
+    <pre className="p-3 text-xs leading-relaxed text-stone-300 overflow-x-auto whitespace-pre">
       {content}
     </pre>
   );
@@ -118,11 +118,11 @@ function HexView({ content }: { content: string }) {
     <pre className="p-3 text-xs leading-relaxed font-mono overflow-x-auto">
       {rows.map((row) => (
         <div key={row.offset} className="flex gap-4">
-          <span className="text-neutral-600 select-none">
+          <span className="text-stone-600 select-none">
             {row.offset.toString(16).padStart(8, "0")}
           </span>
-          <span className="text-neutral-300">{row.hex}</span>
-          <span className="text-neutral-500">{row.ascii}</span>
+          <span className="text-stone-300">{row.hex}</span>
+          <span className="text-stone-500">{row.ascii}</span>
         </div>
       ))}
     </pre>
