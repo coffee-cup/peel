@@ -40,7 +40,7 @@ export function LayerList({ layers, selected, onSelect }: LayerListProps) {
               <Tooltip.Trigger
                 render={
                   <button
-                    className={`flex items-start gap-2 px-3 py-2 text-left text-sm border-l-2 transition-colors cursor-pointer outline-none ${
+                    className={`flex items-center gap-2 px-3 py-2 text-left text-sm border-l-2 transition-colors cursor-pointer outline-none ${
                       active
                         ? "bg-accent/10 border-accent text-stone-100"
                         : "border-transparent hover:bg-stone-800/50 text-stone-300"

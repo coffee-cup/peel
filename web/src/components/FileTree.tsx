@@ -173,7 +173,7 @@ export const FileTree = forwardRef<FileTreeHandle, FileTreeProps>(function FileT
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border shrink-0">
+      <div className="flex items-center gap-2 px-2 h-8 border-b border-border shrink-0">
         <span className="text-xs font-medium text-stone-400">Files</span>
         <button
           type="button"

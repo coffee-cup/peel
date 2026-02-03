@@ -28,7 +28,7 @@ export function FileViewer({ file, loading }: FileViewerProps) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border shrink-0">
+      <div className="flex items-center gap-3 px-3 h-8 border-b border-border shrink-0">
         <span className="font-mono text-xs text-stone-200 truncate">
           {file.path}
           {file.resolvedPath && (
