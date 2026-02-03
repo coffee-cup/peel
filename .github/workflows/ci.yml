@@ -23,5 +23,8 @@ jobs:
       - name: Check
         run: mise run check
 
+      - name: Test
+        run: mise run test
+
       - name: Build
         run: mise run build

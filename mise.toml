@@ -30,6 +30,11 @@ description = "Typecheck Go and TypeScript"
 depends = ["generate:embed-stub"]
 run = "go vet ./... && cd web && bunx tsc --noEmit"
 
+[tasks.test]
+description = "Run Go and frontend tests"
+depends = ["generate:embed-stub"]
+run = "go test ./... && cd web && bunx vitest run"
+
 [tasks.clean]
 description = "Remove build artifacts"
 run = "rm -f peel && rm -rf web/dist internal/embed/dist"
