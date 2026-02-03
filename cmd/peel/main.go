@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -53,15 +54,22 @@ func main() {
 
 	srv := server.New(*dev, analyzed)
 
-	addr := fmt.Sprintf(":%d", *port)
-	url := fmt.Sprintf("http://localhost:%d", *port)
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		ln, err = net.Listen("tcp", ":0")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	actualPort := ln.Addr().(*net.TCPAddr).Port
+	url := fmt.Sprintf("http://localhost:%d", actualPort)
 
 	if !*noOpen && !*dev {
 		go openBrowser(url)
 	}
 
 	log.Printf("listening on %s", url)
-	if err := http.ListenAndServe(addr, srv); err != nil {
+	if err := http.Serve(ln, srv); err != nil {
 		log.Fatal(err)
 	}
 }
