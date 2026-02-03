@@ -31,6 +31,12 @@
 
 ## Install
 
+**Shell (macOS/Linux):**
+
+```
+curl -fsSL https://raw.githubusercontent.com/coffee-cup/peel/main/install.sh | bash
+```
+
 **Go install:**
 
 ```
